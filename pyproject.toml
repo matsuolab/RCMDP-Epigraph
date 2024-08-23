@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "rcmdp-lf"
+version = "0.1.0"
+description = ""
+authors = []
+readme = "README.md"
+packages = [{ include = "rcmdp_lf" }]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.24.1"
+jax = "^0.4.1"
+seaborn = "^0.12.2"
+matplotlib = "^3.6.3"
+jaxlib = "^0.4.1"
+tqdm = "^4.64.1"
+chex = "^0.1.6"
+notebook = "^7.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
