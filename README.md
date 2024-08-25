@@ -11,7 +11,7 @@ This repository is the official implementation of the DLPG-EF algorithm in [Near
 ## Requirements
 
 ```bash
-# make sure you are in Uniform-PAC-Primal-Dual-CMDP/
+# make sure you are in RCMDP-EF/
 poetry install
 ```
 
