@@ -11,7 +11,7 @@ This repository is the official implementation of the DLPG-EF algorithm in [Near
 ## Requirements
 
 ```bash
-# make sure you are in RCMDP-EF/
+# make sure you are in RCMDP-Epigraph/
 poetry install
 ```
 
