@@ -1,11 +1,11 @@
 # Official Implementations of "Near-Optimal Policy Identification in Robust Constrained Markov Decision Processes via Epigraph Form" [Experiments in Section 7]
 
-This repository is the official implementation of the DLPG-EF algorithm in [Near-Optimal Policy Identification in Robust Constrained Markov Decision Processes via Epigraph Form](TODO).
+This repository is the official implementation of the EpiRC-PGS algorithm in [Near-Optimal Policy Identification in Robust Constrained Markov Decision Processes via Epigraph Form](TODO).
 
 * You can see the implementation in [experiments.ipynb](experiments.ipynb).
 
-<img src="double-loop-exp-sd-J.png">
-<img src="double-loop-exp-sd-vio.png">
+<img src="double-loop.png">
+<img src="concept.png">
 
 
 ## Requirements
@@ -17,4 +17,4 @@ poetry install
 
 ## Run Experiments and Plot the results
 
-Run all the cells in [experiments.ipynb](experiments.ipynb).
+Run all the cells in [experiments.ipynb](experiments.ipynb) and [algorithm-concept.ipynb](algorithm-concept.ipynb).
