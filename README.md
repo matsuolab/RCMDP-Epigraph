@@ -1,11 +1,12 @@
-# Official Implementations of "Near-Optimal Policy Identification in Robust Constrained Markov Decision Processes via Epigraph Form" [Experiments in Section 7]
+# Official Implementations of "Near-Optimal Policy Identification in Robust Constrained Markov Decision Processes via Epigraph Form"
 
-This repository is the official implementation of the EpiRC-PGS algorithm in [Near-Optimal Policy Identification in Robust Constrained Markov Decision Processes via Epigraph Form](TODO).
+This repository is the official implementation to reproduce the figures in [Near-Optimal Policy Identification in Robust Constrained Markov Decision Processes via Epigraph Form](https://arxiv.org/abs/2408.16286).
 
-* You can see the implementation in [experiments.ipynb](experiments.ipynb).
+Please see [experiments.ipynb](experiments.ipynb), [algorithm-concept.ipynb](algorithm-concept.ipynb), and [grad-conflict.ipynb](grad-conflict.ipynb).
 
 <img src="double-loop.png">
 <img src="concept.png">
+<img src="conflict.png">
 
 
 ## Requirements
@@ -17,4 +18,7 @@ poetry install
 
 ## Run Experiments and Plot the results
 
-Run all the cells in [experiments.ipynb](experiments.ipynb) and [algorithm-concept.ipynb](algorithm-concept.ipynb).
+Run all the cells in 
+* [experiments.ipynb](experiments.ipynb) 
+* [algorithm-concept.ipynb](algorithm-concept.ipynb).
+* [grad-conflict.ipynb](grad-conflict.ipynb).
