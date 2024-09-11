@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 from jax.random import PRNGKey
 from functools import partial
-from .rcmdp import RCMDP, compute_policy_Q, compute_greedy_Q
+from .rcmdp import RCMDP, compute_policy_Q
 
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
@@ -13,6 +13,30 @@ DISCOUNT = 0.99
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 20  # number of evaluation seeds
 FIGNAME = "finite-random-env"
+
+
+
+@partial(jax.vmap, in_axes=(None, None, 0, None), out_axes=0)
+@partial(jax.vmap, in_axes=(None, None, None, 0), out_axes=0)
+def compute_greedy_Q(discount: float, iter: int, cost: jnp.ndarray, P: jnp.ndarray):
+    """Compute a greedy Q function with respect to the constraint cost function in P
+    Args:
+        discount (float)
+        cost (jnp.ndarray)
+        P (jnp.ndarray)
+
+    Returns:
+        optimal_Q (jnp.ndarray): (SxA)の行列
+    """
+
+    def backup(optimal_Q):
+        next_v = P @ optimal_Q.min(axis=1)
+        assert next_v.shape == (S, A)
+        return cost + discount * next_v
+    
+    optimal_Q = jnp.zeros((S, A))
+    body_fn = lambda i, Q: backup(Q)
+    return jax.lax.fori_loop(0, iter, body_fn, optimal_Q)
 
 
 def create_rcmdp(seed: int):

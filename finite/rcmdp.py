@@ -78,28 +78,3 @@ def compute_policy_visit_s(discount: float, policy: jnp.ndarray, init_dist: jnp.
     PiP = Pi @ P.reshape(S*A, S) 
     d_pi = init_dist @ jnp.linalg.inv(jnp.eye(S) - discount * PiP)
     return d_pi
-
-
-@partial(jax.vmap, in_axes=(None, None, 0, None), out_axes=0)
-@partial(jax.vmap, in_axes=(None, None, None, 0), out_axes=0)
-def compute_greedy_Q(discount: float, iter: int, cost: jnp.ndarray, P: jnp.ndarray):
-    """Compute a greedy Q function with respect to the constraint cost function in P
-    Args:
-        discount (float)
-        cost (jnp.ndarray)
-        P (jnp.ndarray)
-
-    Returns:
-        optimal_Q (jnp.ndarray): (SxA)の行列
-    """
-
-    def backup(optimal_Q):
-        next_v = P @ optimal_Q.min(axis=1)
-        assert next_v.shape == (S, A)
-        return cost + discount * next_v
-    
-    optimal_Q = jnp.zeros((S, A))
-    body_fn = lambda i, Q: backup(Q)
-    return jax.lax.fori_loop(0, iter, body_fn, optimal_Q)
-
-
