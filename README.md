@@ -19,6 +19,6 @@ poetry install
 ## Run Experiments and Plot the results
 
 Run all the cells in 
-* [experiments.ipynb](experiments.ipynb) 
+* [benchmarks/finite-set.ipynb](benchmarks/finite-set.ipynb) 
 * [algorithm-concept.ipynb](algorithm-concept.ipynb).
 * [grad-conflict.ipynb](grad-conflict.ipynb).
