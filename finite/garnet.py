@@ -8,14 +8,14 @@ from .rcmdp import RCMDP, compute_policy_Q, compute_policy_visit_s, compute_poli
 
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
-S, A = 15, 5  # state and action space sizes
-REACHABLE = 3  # number of reachable states in the GARNET MDP
+S, A = 5, 3  # state and action space sizes
+REACHABLE = 2  # number of reachable states in the GARNET MDP
 N = 1  # number of constraints
-USIZE = 5  # size of uncertainty set
+USIZE = 3  # size of uncertainty set
 DISCOUNT = 0.992
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 10  # number of evaluation seeds
-FIGNAME = "finite/garnet-env"
+FIGNAME = f"finite/garnet-env-{S}-{A}-{REACHABLE}-{DISCOUNT}"
 
 
 @partial(jax.vmap, in_axes=(None, None, 0, None), out_axes=0)
