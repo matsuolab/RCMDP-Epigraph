@@ -8,11 +8,11 @@ from .rcmdp import RCMDP, compute_policy_Q, compute_policy_visit_s, compute_poli
 
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
-S, A = 5, 3  # state and action space sizes
+S, A = 9, 4  # state and action space sizes
 REACHABLE = 2  # number of reachable states in the GARNET MDP
 N = 1  # number of constraints
-USIZE = 3  # size of uncertainty set
-DISCOUNT = 0.992
+USIZE = 2  # size of uncertainty set
+DISCOUNT = 0.991
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 10  # number of evaluation seeds
 FIGNAME = f"finite/garnet-env-{S}-{A}-{REACHABLE}-{DISCOUNT}"
