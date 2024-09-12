@@ -2,7 +2,8 @@ import jax
 import jax.numpy as jnp
 from jax.random import PRNGKey
 from functools import partial
-from .rcmdp import RCMDP, compute_policy_Q
+import chex
+from .rcmdp import RCMDP, compute_policy_Q, compute_policy_visit_s, compute_policy_worst_values
 
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
@@ -12,8 +13,7 @@ USIZE = 5  # size of uncertainty set
 DISCOUNT = 0.99 
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 20  # number of evaluation seeds
-FIGNAME = "finite-random-env"
-
+FIGNAME = "finite/random-env"
 
 
 @partial(jax.vmap, in_axes=(None, None, 0, None), out_axes=0)
@@ -89,3 +89,20 @@ def create_rcmdp(seed: int):
 
     rcmdp = rcmdp._replace(threshes=jnp.array(threshes))
     return rcmdp
+
+
+# ===== test =====
+
+rcmdp = create_rcmdp(0)
+policy = jnp.ones((S, A)) / A
+Qs = compute_policy_Q(rcmdp.discount, policy, rcmdp.costs, rcmdp.U)  # N+1 x |U| x S x A
+Vs = (Qs * policy.reshape(1, 1, S, A)).sum(axis=-1)
+Js = jnp.sum(Vs * rcmdp.init_dist.reshape(1, 1, S), axis=-1)
+ds = compute_policy_visit_s(rcmdp.discount, policy, rcmdp.init_dist, rcmdp.U)
+
+chex.assert_shape(Qs, (N+1, USIZE, S, A))
+chex.assert_shape(Js, (N+1, USIZE))
+chex.assert_shape(ds, (USIZE, S))
+
+worst_P_Q, worst_P_occ, worst_P_J = compute_policy_worst_values(policy, rcmdp)
+print("test passed")
