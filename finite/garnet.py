@@ -1,5 +1,6 @@
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jax.random import PRNGKey
 from functools import partial
 import chex
@@ -8,12 +9,13 @@ from .rcmdp import RCMDP, compute_policy_Q, compute_policy_visit_s, compute_poli
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
 S, A = 15, 5  # state and action space sizes
+REACHABLE = 3  # number of reachable states in the GARNET MDP
 N = 1  # number of constraints
 USIZE = 5  # size of uncertainty set
-DISCOUNT = 0.99 
+DISCOUNT = 0.992
 ITER_LENGTH = 1000  # iteration length for experiment
-NUM_SEEDS = 20  # number of evaluation seeds
-FIGNAME = "finite/random-env"
+NUM_SEEDS = 10  # number of evaluation seeds
+FIGNAME = "finite/garnet-env"
 
 
 @partial(jax.vmap, in_axes=(None, None, 0, None), out_axes=0)
@@ -62,7 +64,12 @@ def create_rcmdp(seed: int):
     U = jnp.zeros((USIZE, S, A, S))
     for u in range(USIZE):
         key, _key = jax.random.split(key)
-        P = jax.random.dirichlet(key=_key, alpha=jnp.array([0.05] * S), shape=((S*A,)))
+        P = jax.random.uniform(key, (S * A, S))
+        for idx in range(S*A):
+            key, _key = jax.random.split(key)
+            unreachable_states = jax.random.choice(key, S, shape=(S-REACHABLE,), replace=False)
+            P = P.at[idx, unreachable_states].set(0)
+        P = P / jnp.sum(P, axis=-1, keepdims=True)
         P = P.reshape(S, A, S)
         # np.testing.assert_allclose(P.sum(axis=-1), 1, atol=1e-6)
         U = U.at[u].set(P)
