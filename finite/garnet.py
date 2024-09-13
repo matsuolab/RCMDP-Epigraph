@@ -13,9 +13,9 @@ REACHABLE = 2  # number of reachable states in the GARNET MDP
 N = 1  # number of constraints
 USIZE = 2  # size of uncertainty set
 DISCOUNT = 0.991
-ITER_LENGTH = 1000  # iteration length for experiment
+ITER_LENGTH = 5000  # iteration length for experiment
 NUM_SEEDS = 10  # number of evaluation seeds
-FIGNAME = f"finite/garnet-env-{S}-{A}-{REACHABLE}-{DISCOUNT}"
+FIGNAME = f"finite/garnet-env-{S}-{A}-{REACHABLE}-{USIZE}-{DISCOUNT}"
 
 
 @partial(jax.vmap, in_axes=(None, None, 0, None), out_axes=0)
