@@ -15,7 +15,6 @@ class RCMDP(NamedTuple):
     costs: jnp.array  # cost functions
     threshes: jnp.array  # constraint thresholds
     nominal_P: jnp.array  # nominal transition
-    KL_rad: float  # KL radius
     init_dist: jnp.array  # initial distribution
 
     @property

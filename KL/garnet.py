@@ -10,37 +10,25 @@ from .rcmdp import RCMDP
 
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
-S, A = 5, 2  # state and action space sizes
+S, A = 9, 4  # state and action space sizes
 REACHABLE = 2  # number of reachable states in the GARNET MDP
 N = 1  # number of constraints
-KL_RAD = 1.0
-DISCOUNT = 0.8
-ITER_LENGTH = 100  # iteration length for experiment
-NUM_SEEDS = 1  # number of evaluation seeds
-FIGNAME = f"KL/garnet-env-{S}-{A}-{REACHABLE}-{KL_RAD}-{DISCOUNT}"
+KL_PEN = 1.0
+DISCOUNT = 0.991
+ITER_LENGTH = 1000  # iteration length for experiment
+NUM_SEEDS = 10  # number of evaluation seeds
+FIGNAME = f"KL/garnet-env-{S}-{A}-{REACHABLE}-{KL_PEN}-{DISCOUNT}"
+DP_ITER = int(1 / (1 - DISCOUNT)) * 2
 
 
 # >>>>> KL uncertainty set >>>>>
 
 min_eps = jnp.finfo(jnp.float64).resolution
 
-def worst_PV_loss(lam: float, Psa: jnp.ndarray, V: jnp.ndarray):
-    """
-    min P(s, a) V such that {KL(P(s, a)|Po) <= rad} is equivalent to minimizing this loss function
-    See Lemma 4 in http://www.corc.ieor.columbia.edu/reports/techreports/tr-2002-07.pdf
-    """
-    logsumexp = jax.nn.logsumexp(jnp.log(Psa+min_eps) - V / (lam + min_eps))
-    return KL_RAD * lam + lam * logsumexp
-
-
-pg = ProjectedGradient(fun=worst_PV_loss, projection=projection_non_negative)
-
 @partial(jax.vmap, in_axes=(0, None), out_axes=0)
 def compute_worst_P(Psa: jnp.ndarray, V: jnp.ndarray):
-    init_lam = 0.1
     nV = V.max() - V  # worst_PV_loss is for reward function. Taking negative for cost.
-    lam = pg.run(init_lam, None, Psa, nV).params
-    return jax.nn.softmax(jnp.log(Psa+min_eps) - nV / (lam + min_eps))
+    return jax.nn.softmax(jnp.log(Psa+min_eps) - nV / (KL_PEN + min_eps))
 
 
 # <<<<< KL uncertainty set <<<<<
@@ -80,20 +68,21 @@ def compute_robust_policy_Q(discount: float, policy: jnp.ndarray, cost: jnp.ndar
     chex.assert_shape(nominal_P, (S, A, S))
 
     def condition_fn(loop_args):
-        pQ, Q = loop_args
-        return jnp.abs(pQ - Q).max() > 1e-2 
+        k, pQ, Q = loop_args
+        return (jnp.abs(pQ - Q).max() > 1e-3) & (k < DP_ITER)
 
     def loop_fn(loop_args):
-        pQ, Q = loop_args
+        k, pQ, Q = loop_args
         V = (policy * Q).sum(axis=-1)
         worst_P = compute_worst_P(nominal_P.reshape(S * A, S), V)
         pQ = Q
         Q = cost + discount * worst_P.reshape(S, A, S) @ V
-        return pQ, Q
+        k = k + 1
+        return k, pQ, Q
    
     pQ = jnp.ones((S, A)) * jnp.inf
     Q = jnp.zeros((S, A))
-    _, Q = jax.lax.while_loop(condition_fn, loop_fn, (pQ, Q))
+    _, _, Q = jax.lax.while_loop(condition_fn, loop_fn, (0, pQ, Q))
     return Q
 
 
@@ -169,20 +158,21 @@ def compute_robust_greedy_Q(discount: float, cost: jnp.ndarray, nominal_P: jnp.n
     chex.assert_shape(nominal_P, (S, A, S))
 
     def condition_fn(loop_args):
-        pQ, Q = loop_args
-        return jnp.abs(pQ - Q).max() > 1e-2
+        k, pQ, Q = loop_args
+        return (jnp.abs(pQ - Q).max() > 1e-3) & (k < DP_ITER)
 
     def loop_fn(loop_args):
-        pQ, Q = loop_args
+        k, pQ, Q = loop_args
         V = Q.min(axis=-1)
         worst_P = compute_worst_P(nominal_P.reshape(S*A, S), V)
         pQ = Q
         Q = cost + discount * worst_P.reshape(S, A, S) @ V
-        return pQ, Q
+        k = k + 1
+        return k, pQ, Q
    
     pQ = jnp.ones((S, A)) * jnp.inf
     Q = jnp.zeros((S, A))
-    _, Q = jax.lax.while_loop(condition_fn, loop_fn, (pQ, Q))
+    _, _, Q = jax.lax.while_loop(condition_fn, loop_fn, (0, pQ, Q))
     return Q
 
 
@@ -214,7 +204,7 @@ def create_rcmdp(seed: int):
     nominal_P = nominal_P / jnp.sum(nominal_P, axis=-1, keepdims=True)
     nominal_P = nominal_P.reshape(S, A, S)
 
-    rcmdp = RCMDP(S_set, A_set, DISCOUNT, costs, const, nominal_P, KL_RAD, init_dist)
+    rcmdp = RCMDP(S_set, A_set, DISCOUNT, costs, const, nominal_P, init_dist)
 
     # set the constraint threshold based on the possible constraint satisfaction
     const = 0
