@@ -10,11 +10,11 @@ from .rcmdp import RCMDP
 
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
-S, A = 9, 4  # state and action space sizes
-REACHABLE = 2  # number of reachable states in the GARNET MDP
-N = 1  # number of constraints
-KL_PEN = 1.0
-DISCOUNT = 0.991
+S, A = 5, 3  # state and action space sizes
+REACHABLE = 1  # number of reachable states in the GARNET MDP
+N = 4  # number of constraints
+KL_PEN = 2.0
+DISCOUNT = 0.99
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 10  # number of evaluation seeds
 FIGNAME = f"KL/garnet-env-{S}-{A}-{REACHABLE}-{KL_PEN}-{DISCOUNT}"
@@ -69,7 +69,7 @@ def compute_robust_policy_Q(discount: float, policy: jnp.ndarray, cost: jnp.ndar
 
     def condition_fn(loop_args):
         k, pQ, Q = loop_args
-        return (jnp.abs(pQ - Q).max() > 1e-3) & (k < DP_ITER)
+        return (jnp.abs(pQ - Q).max() > 1e-6) & (k < DP_ITER)
 
     def loop_fn(loop_args):
         k, pQ, Q = loop_args
@@ -142,40 +142,6 @@ def compute_policy_worst_values(policy: jnp.ndarray, rcmdp: RCMDP):
     return rob_Qs, worst_P_occ, worst_P_J
 
 
-
-@partial(jax.vmap, in_axes=(None, 0, None), out_axes=0)
-def compute_robust_greedy_Q(discount: float, cost: jnp.ndarray, nominal_P: jnp.ndarray):
-    """Compute a greedy robust Q function with respect to the constraint cost function in P
-    Args:
-        discount (float)
-        cost (jnp.ndarray)
-        P (jnp.ndarray)
-
-    Returns:
-        optimal_Q (jnp.ndarray): (SxA)の行列
-    """
-    S, A = cost.shape
-    chex.assert_shape(nominal_P, (S, A, S))
-
-    def condition_fn(loop_args):
-        k, pQ, Q = loop_args
-        return (jnp.abs(pQ - Q).max() > 1e-3) & (k < DP_ITER)
-
-    def loop_fn(loop_args):
-        k, pQ, Q = loop_args
-        V = Q.min(axis=-1)
-        worst_P = compute_worst_P(nominal_P.reshape(S*A, S), V)
-        pQ = Q
-        Q = cost + discount * worst_P.reshape(S, A, S) @ V
-        k = k + 1
-        return k, pQ, Q
-   
-    pQ = jnp.ones((S, A)) * jnp.inf
-    Q = jnp.zeros((S, A))
-    _, _, Q = jax.lax.while_loop(condition_fn, loop_fn, (0, pQ, Q))
-    return Q
-
-
 def create_rcmdp(seed: int):
     key = PRNGKey(seed)
 
@@ -186,9 +152,8 @@ def create_rcmdp(seed: int):
     # randomly create cost function
     costs = jnp.ones((N+1, S, A))
     key, _key = jax.random.split(key)
-    zero_mask = jax.random.bernoulli(_key, p=0.5, shape=costs.shape)
+    zero_mask = jax.random.bernoulli(_key, p=0.9, shape=costs.shape)
     costs = costs * zero_mask
-    costs = costs.at[1].set(1 - costs[0])
 
     # create initial distribution
     key, _key = jax.random.split(key)
@@ -206,20 +171,11 @@ def create_rcmdp(seed: int):
 
     rcmdp = RCMDP(S_set, A_set, DISCOUNT, costs, const, nominal_P, init_dist)
 
-    # set the constraint threshold based on the possible constraint satisfaction
-    const = 0
-    greedy_Qs = compute_robust_greedy_Q(rcmdp.discount, rcmdp.costs, rcmdp.nominal_P)
-    chex.assert_shape(greedy_Qs, (N+1, S, A))
-    greedy_idxes = greedy_Qs.argmin(axis=-1).reshape(-1, S)
-    greedy_policy = jnp.zeros((S, A))
-    for i in range((N+1)):
-        greedy_policy = greedy_policy.at[jnp.arange(S), greedy_idxes[i]].add(1)
-    greedy_policy = greedy_policy / (N+1)
-    # np.testing.assert_allclose(greedy_policy.sum(axis=-1), 1, atol=1e-6)
-
     threshes = []
-    Qs = compute_robust_policy_Q(rcmdp.discount, greedy_policy, costs, rcmdp.nominal_P)
-    Vs = (greedy_policy.reshape(1, S, A) * Qs).sum(axis=-1)
+    key, _key = jax.random.split(key)
+    random_policy = jax.random.dirichlet(key=_key, alpha=jnp.array([0.2] * A), shape=((S,)))
+    Qs = compute_robust_policy_Q(rcmdp.discount, random_policy, costs, rcmdp.nominal_P)
+    Vs = (random_policy.reshape(1, S, A) * Qs).sum(axis=-1)
     Js = (Vs * rcmdp.init_dist.reshape(1, S)).sum(axis=-1)
     # assert Js.shape == (N + 1, USIZE)
     threshes = Js[1:]
