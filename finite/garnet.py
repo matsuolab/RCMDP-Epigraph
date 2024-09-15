@@ -9,7 +9,7 @@ from .rcmdp import RCMDP
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
 S, A = 7, 4  # state and action space sizes
-REACHABLE = 2  # number of reachable states in the GARNET MDP
+REACHABLE = 1  # number of reachable states in the GARNET MDP
 N = 5  # number of constraints
 USIZE = 5  # size of uncertainty set
 DISCOUNT = 0.995
