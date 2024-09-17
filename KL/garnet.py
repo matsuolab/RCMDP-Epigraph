@@ -10,14 +10,14 @@ from .rcmdp import RCMDP
 
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
-S, A = 5, 3  # state and action space sizes
-REACHABLE = 1  # number of reachable states in the GARNET MDP
+S, A = 7, 4  # state and action space sizes
+DIRICHLET = 0.1
 N = 4  # number of constraints
 KL_PEN = 2.0
 DISCOUNT = 0.99
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 10  # number of evaluation seeds
-FIGNAME = f"KL/garnet-env-{S}-{A}-{REACHABLE}-{KL_PEN}-{DISCOUNT}"
+FIGNAME = f"KL/garnet-env-{S}-{A}-{DIRICHLET}-{KL_PEN}-{DISCOUNT}"
 DP_ITER = int(1 / (1 - DISCOUNT)) * 2
 
 
@@ -28,7 +28,7 @@ min_eps = jnp.finfo(jnp.float64).resolution
 @partial(jax.vmap, in_axes=(0, None), out_axes=0)
 def compute_worst_P(Psa: jnp.ndarray, V: jnp.ndarray):
     nV = V.max() - V  # worst_PV_loss is for reward function. Taking negative for cost.
-    return jax.nn.softmax(jnp.log(Psa+min_eps) - nV / (KL_PEN + min_eps))
+    return jax.nn.softmax(jnp.log(Psa) - nV / KL_PEN)
 
 
 # <<<<< KL uncertainty set <<<<<
@@ -161,13 +161,10 @@ def create_rcmdp(seed: int):
     # np.testing.assert_allclose(init_dist.sum(axis=-1), 1, atol=1e-6)
 
     # create nominal transition function
-    nominal_P = jax.random.uniform(key, (S * A, S))
-    for idx in range(S*A):
-        key, _key = jax.random.split(key)
-        unreachable_states = jax.random.choice(key, S, shape=(S-REACHABLE,), replace=False)
-        nominal_P = nominal_P.at[idx, unreachable_states].set(0)
-    nominal_P = nominal_P / jnp.sum(nominal_P, axis=-1, keepdims=True)
+    key, _key = jax.random.split(key)
+    nominal_P = jax.random.dirichlet(key=_key, alpha=jnp.array([DIRICHLET] * S), shape=((S*A,)))
     nominal_P = nominal_P.reshape(S, A, S)
+    # np.testing.assert_allclose(nominal_P.sum(axis=-1), 1, atol=1e-6)
 
     rcmdp = RCMDP(S_set, A_set, DISCOUNT, costs, const, nominal_P, init_dist)
 

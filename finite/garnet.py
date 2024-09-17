@@ -9,13 +9,13 @@ from .rcmdp import RCMDP
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
 S, A = 7, 4  # state and action space sizes
-REACHABLE = 1  # number of reachable states in the GARNET MDP
 N = 5  # number of constraints
+DIRICHLET = 0.1
 USIZE = 5  # size of uncertainty set
 DISCOUNT = 0.995
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 10  # number of evaluation seeds
-FIGNAME = f"finite/garnet-env-{S}-{A}-{REACHABLE}-{USIZE}-{DISCOUNT}"
+FIGNAME = f"finite/garnet-env-{S}-{A}-{DIRICHLET}-{USIZE}-{DISCOUNT}"
 
 
 @jax.jit
@@ -128,19 +128,14 @@ def create_rcmdp(seed: int):
 
     # create initial distribution
     key, _key = jax.random.split(key)
-    init_dist = jax.random.dirichlet(key=_key, alpha=jnp.array([0.1] * S))
+    init_dist = jax.random.dirichlet(key=_key, alpha=jnp.array([0.5] * S))
     # np.testing.assert_allclose(init_dist.sum(axis=-1), 1, atol=1e-6)
 
     # create uncertainty set
     U = jnp.zeros((USIZE, S, A, S))
     for u in range(USIZE):
         key, _key = jax.random.split(key)
-        P = jax.random.uniform(key, (S * A, S))
-        for idx in range(S*A):
-            key, _key = jax.random.split(key)
-            unreachable_states = jax.random.choice(key, S, shape=(S-REACHABLE,), replace=False)
-            P = P.at[idx, unreachable_states].set(0)
-        P = P / jnp.sum(P, axis=-1, keepdims=True)
+        P = jax.random.dirichlet(key=_key, alpha=jnp.array([DIRICHLET] * S), shape=((S*A,)))
         P = P.reshape(S, A, S)
         # np.testing.assert_allclose(P.sum(axis=-1), 1, atol=1e-6)
         U = U.at[u].set(P)
@@ -154,7 +149,7 @@ def create_rcmdp(seed: int):
     Vs = (random_policy.reshape(1, 1, S, A) * Qs).sum(axis=-1)
     Js = (Vs * rcmdp.init_dist.reshape(1, 1, S)).sum(axis=-1).max(axis=-1)
     # assert Js.shape == (N + 1, USIZE)
-    threshes = Js[1:]
+    threshes = Js[1:] * 1.01
 
     return rcmdp._replace(threshes=threshes)
 
