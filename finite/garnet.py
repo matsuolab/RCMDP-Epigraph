@@ -11,8 +11,8 @@ from .rcmdp import RCMDP
 S, A = 7, 4  # state and action space sizes
 N = 5  # number of constraints
 DIRICHLET = 0.1
-USIZE = 5  # size of uncertainty set
-DISCOUNT = 0.995
+USIZE = 1  # size of uncertainty set
+DISCOUNT = 0.99
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 10  # number of evaluation seeds
 FIGNAME = f"finite/garnet-env-{S}-{A}-{DIRICHLET}-{USIZE}-{DISCOUNT}"
