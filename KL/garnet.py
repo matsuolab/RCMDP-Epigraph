@@ -10,10 +10,10 @@ from .rcmdp import RCMDP
 
 # The overall experiments will finish about 30 minutes using 20 CPUs
 
-S, A = 7, 4  # state and action space sizes
+S, A = 5, 3  # state and action space sizes
 DIRICHLET = 0.1
 N = 4  # number of constraints
-KL_PEN = 2.0
+KL_PEN = 1.0
 DISCOUNT = 0.99
 ITER_LENGTH = 1000  # iteration length for experiment
 NUM_SEEDS = 10  # number of evaluation seeds
@@ -157,7 +157,7 @@ def create_rcmdp(seed: int):
 
     # create initial distribution
     key, _key = jax.random.split(key)
-    init_dist = jax.random.dirichlet(key=_key, alpha=jnp.array([0.1] * S))
+    init_dist = jax.random.dirichlet(key=_key, alpha=jnp.array([0.5] * S))
     # np.testing.assert_allclose(init_dist.sum(axis=-1), 1, atol=1e-6)
 
     # create nominal transition function
