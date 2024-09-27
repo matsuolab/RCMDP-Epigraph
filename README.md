@@ -2,11 +2,11 @@
 
 This repository is the official implementation to reproduce the figures in [Near-Optimal Policy Identification in Robust Constrained Markov Decision Processes via Epigraph Form](https://arxiv.org/abs/2408.16286).
 
-Please see [experiments.ipynb](experiments.ipynb), [algorithm-concept.ipynb](algorithm-concept.ipynb), and [grad-conflict.ipynb](grad-conflict.ipynb).
+Please see [solve-rcmdp.ipynb](solve-rcmdp.ipynb) , [algorithm-concept.ipynb](algorithm-concept.ipynb), and [grad-conflict.ipynb](grad-conflict.ipynb).
 
-<img src="double-loop.png">
-<img src="concept.png">
-<img src="conflict.png">
+<img src="results/all.png">
+<img src="results/concept.png">
+<img src="results/conflict.png">
 
 
 ## Requirements
@@ -19,6 +19,6 @@ poetry install
 ## Run Experiments and Plot the results
 
 Run all the cells in 
-* [benchmarks/finite-set.ipynb](benchmarks/finite-set.ipynb) 
+* [solve-rcmdp.ipynb](solve-rcmdp.ipynb) 
 * [algorithm-concept.ipynb](algorithm-concept.ipynb).
 * [grad-conflict.ipynb](grad-conflict.ipynb).
