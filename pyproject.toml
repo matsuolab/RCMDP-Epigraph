@@ -16,6 +16,7 @@ jaxlib = "^0.4.1"
 tqdm = "^4.64.1"
 chex = "^0.1.6"
 notebook = "^7.2.1"
+jaxopt = "^0.8.3"
 
 [build-system]
 requires = ["poetry-core"]
