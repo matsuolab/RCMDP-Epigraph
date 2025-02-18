@@ -19,6 +19,9 @@ poetry install
 ## Run Experiments and Plot the results
 
 Run all the cells in 
-* [solve-rcmdp.ipynb](solve-rcmdp.ipynb) 
 * [algorithm-concept.ipynb](algorithm-concept.ipynb).
 * [grad-conflict.ipynb](grad-conflict.ipynb).
+
+For the algorithm comparison, run the following notebook
+* [solve-rcmdp.ipynb](solve-rcmdp.ipynb) 
+    * and then plot the results by [plot-all.ipynb](plot-all.ipynb)
